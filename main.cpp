@@ -6,6 +6,7 @@
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
 
+#include <chrono>
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
@@ -25,6 +26,7 @@ public:
 private:
     GLFWwindow* window;
     VkInstance instance;
+    int i = 0;
 
     void initWindow() {
         glfwInit();
@@ -38,16 +40,49 @@ private:
     void initVulkan() {
         createInstance();
 
-        // main code
-        glm::mat4 matrix;
-        glm::vec4 vec;
-        auto test = matrix * vec;
-        // main code
+        //// main code
+        //glm::mat4 matrix;
+        //glm::vec4 vec;
+        //auto test = matrix * vec;
+        //// main code
+        //printf("Hello, World!");
     }
 
-    void mainLoop() {
+    int mainLoop() {
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
+            //const auto start{ std::chrono::steady_clock::now() };
+            //const auto finish{ std::chrono::steady_clock::now() };
+            //const std::chrono::duration<double> elapsed_seconds{ finish - start };
+
+            //std::cout << elapsed_seconds.count() << std::endl;
+
+            //while (i != 10000) {
+            //    i++;
+            //    elapsed_seconds.count();
+            //}
+
+            //std::cout << i << std::endl;
+
+            //std::cout << elapsed_seconds.count() << std::endl;
+
+                // Measures and displays an execution time of a function call.
+            const auto start{ std::chrono::steady_clock::now() };
+            const auto finish{ std::chrono::steady_clock::now() };
+            const std::chrono::duration<double> elapsed_seconds{ finish - start };
+
+            //  std::cout << elapsed_seconds.count() << "s\n"; // Before C++20
+            while (i != 10000) {
+                i++;
+                std::cout << "\nElapsed time: " << elapsed_seconds << std::endl; // C++20's chrono::duration operator<<
+            }
+
+            // Prints UTC and local time.
+            const auto tp_utc{ std::chrono::system_clock::now() };
+            std::cout << "Current time 'UTC' is: " << tp_utc << std::endl;
+            std::cout << "Current time 'Local' is: " << std::chrono::current_zone()->to_local(tp_utc) << std::endl;
+
+            return EXIT_SUCCESS;
         }
     }
 
