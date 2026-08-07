@@ -58,23 +58,80 @@ private:
     }
 
     void createInstance() {
-        VkApplicationInfo appInfo{};
         VkInstanceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Hello Triangle";
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "No Engine";
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-        vkEnumerateInstanceExtensionProperties(nullptr, &glfwExtensionCount, nullptr);
+        if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+            std::cout << "Unable to create VKInstance" << std::endl;
+            return;
+        }
 
-        std::cout << glfwExtensionCount << " extensions supported\n";
+        // получаем устройство
+        VkPhysicalDevice physicalDevice = selectDevice(&instance);
+
+        // проверяем, что устройство успешно получено
+        if (physicalDevice == VK_NULL_HANDLE) {
+            std::cout << "Failed to find a suitable GPU" << std::endl;
+        }
+        else {
+            // если устройство найдено, выводим его название
+            VkPhysicalDeviceProperties deviceProperties;
+            vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+            std::cout << "Selected device: " << deviceProperties.deviceName << std::endl;
+        }
+
+        vkDestroyInstance(instance, nullptr);
+    }
+
+    void displayDevices(VkInstance* instance) {
+
+        uint32_t deviceCount = 0;
+        vkEnumeratePhysicalDevices(*instance, &deviceCount, nullptr);
+
+        if (!deviceCount) return;
+        std::vector<VkPhysicalDevice> devices(deviceCount);
+
+        vkEnumeratePhysicalDevices(*instance, &deviceCount, devices.data());
+
+        VkPhysicalDeviceProperties deviceProperties;
+        VkPhysicalDeviceFeatures deviceFeatures;  // для получения поддерживаемых функциональностей
+
+        for (const auto& device : devices) {
+            vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+            // для каждого устройства получаем поддерживаемую функциональность
+            vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+            std::cout << deviceProperties.deviceName << std::endl;
+            // проверяем поддержку геометрических шейдеров
+            std::cout << "Support for geometry shader: " << (deviceFeatures.geometryShader ? "Yes" : "No") << std::endl;
+        }
+    }
+
+    // функция выбора устройства
+    VkPhysicalDevice selectDevice(VkInstance* instance) {
+
+        uint32_t deviceCount = 0;
+        vkEnumeratePhysicalDevices(*instance, &deviceCount, nullptr);
+        // Если устройств с поддержкой Vulkan 0, то нет смысла что-то еще делать
+        if (!deviceCount) {
+            std::cout << "No available devices" << std::endl;
+            return VK_NULL_HANDLE;
+        }
+        // определяем вектор для хранения всех дескрипторов VkPhysicalDevice.
+        std::vector<VkPhysicalDevice> devices(deviceCount);
+        // получаем устройства
+        vkEnumeratePhysicalDevices(*instance, &deviceCount, devices.data());
+
+        VkPhysicalDeviceProperties deviceProperties;
+        // перебираем полученные устройства
+        for (const auto& device : devices) {
+            vkGetPhysicalDeviceProperties(device, &deviceProperties);
+            // определяем дискретную видеокарту
+            if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+                return device;
+        }
+        return VK_NULL_HANDLE;
     }
 };
 
