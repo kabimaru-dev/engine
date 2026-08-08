@@ -101,10 +101,13 @@ private:
         if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
             std::cout << "failed to create instance!" << std::endl;
         }
+
+        std::cout << "1. createInstance: " << "okay" << std::endl;
     }
 
     void setupDebugMessenger() {
         if (!enableValidationLayers) return;
+        std::cout << "2. setupDebugMessenger: " << "pass" << std::endl;
     }
 
     void createSurface() {
@@ -143,7 +146,7 @@ private:
                 }
             }
 
-        std::cout << deviceProperties.deviceName << std::endl;
+        std::cout << "3. pickPhysicalDevice: " << deviceProperties.deviceName << std::endl;
 
         if (physicalDevice == VK_NULL_HANDLE) throw std::runtime_error("failed to find a suitable GPU!");
     }
