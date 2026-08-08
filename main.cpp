@@ -36,6 +36,7 @@ public:
 private:
     GLFWwindow* window;
     VkInstance instance;
+    VkDebugUtilsMessengerEXT debugMessenger;
     VkInstanceCreateInfo createInfo{};
     uint32_t i = 0;
 
@@ -48,63 +49,9 @@ private:
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan window", nullptr, nullptr);
     }
 
-    void displayDevices(VkInstance* instance) {
-
-        uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(*instance, &deviceCount, nullptr);
-
-        if (!deviceCount) return;
-        std::vector<VkPhysicalDevice> devices(deviceCount);
-
-        vkEnumeratePhysicalDevices(*instance, &deviceCount, devices.data());
-
-        VkPhysicalDeviceProperties deviceProperties;
-        VkPhysicalDeviceFeatures deviceFeatures;  // для получения поддерживаемых функциональностей
-
-        for (const auto& device : devices) {
-            vkGetPhysicalDeviceProperties(device, &deviceProperties);
-
-            // для каждого устройства получаем поддерживаемую функциональность
-            vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
-            std::cout << deviceProperties.deviceName << std::endl;
-            // проверяем поддержку геометрических шейдеров
-            std::cout << "Support for geometry shader: " << (deviceFeatures.geometryShader ? "Yes" : "No") << std::endl;
-        }
-    }
-
-    VkPhysicalDevice selectDevice(VkInstance* instance) {
-
-        uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(*instance, &deviceCount, nullptr);
-        // Если устройств с поддержкой Vulkan 0, то нет смысла что-то еще делать
-        if (!deviceCount) {
-            std::cout << "No available devices" << std::endl;
-            return VK_NULL_HANDLE;
-        }
-        // определяем вектор для хранения всех дескрипторов VkPhysicalDevice.
-        std::vector<VkPhysicalDevice> devices(deviceCount);
-        // получаем устройства
-        vkEnumeratePhysicalDevices(*instance, &deviceCount, devices.data());
-
-        VkPhysicalDeviceProperties deviceProperties;
-        // перебираем полученные устройства
-        for (const auto& device : devices) {
-            vkGetPhysicalDeviceProperties(device, &deviceProperties);
-            // определяем дискретную видеокарту
-            if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-                return device;
-        }
-        return VK_NULL_HANDLE;
-    }
-
     void initVulkan() {
         createInstance();
         setupDebugMessenger();
-    }
-
-    void setupDebugMessenger() {
-        if (!enableValidationLayers) return;
     }
 
     void createInstance() {
@@ -130,8 +77,12 @@ private:
         createInfo.enabledLayerCount = 0;
 
         if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create instance!");
+            std::cout << "failed to create instance!" << std::endl;
         }
+    }
+
+    void setupDebugMessenger() {
+        if (!enableValidationLayers) return;
     }
 
     void mainLoop() {
