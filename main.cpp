@@ -26,6 +26,7 @@ public:
 private:
     GLFWwindow* window;
     VkInstance instance;
+    VkInstanceCreateInfo createInfo{};
     uint32_t i = 0;
 
     void initWindow() {
@@ -35,62 +36,6 @@ private:
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan window", nullptr, nullptr);
-    }
-
-    void initVulkan() {
-        createInstance();
-    }
-
-    int mainLoop() {
-        while (!glfwWindowShouldClose(window)) {
-            glfwPollEvents();
-
-            std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
-
-            while (i != 2'250'000'000) {
-                i++;
-            }
-
-            std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
-
-            auto elapsed = duration_cast<std::chrono::milliseconds>(end - start);
-
-            std::cout << "Elapsed Time: " << elapsed.count() / 1000 << "." << elapsed.count() % 1000 << "s";
-
-            return EXIT_SUCCESS;
-        }
-    }
-
-    void cleanup() {
-        glfwDestroyWindow(window);
-
-        glfwTerminate();
-    }
-
-    void createInstance() {
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-
-        if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-            std::cout << "Unable to create VKInstance" << std::endl;
-            return;
-        }
-
-        // получаем устройство
-        VkPhysicalDevice physicalDevice = selectDevice(&instance);
-
-        // проверяем, что устройство успешно получено
-        if (physicalDevice == VK_NULL_HANDLE) {
-            std::cout << "Failed to find a suitable GPU" << std::endl;
-        }
-        else {
-            // если устройство найдено, выводим его название
-            VkPhysicalDeviceProperties deviceProperties;
-            vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-            std::cout << "Selected device: " << deviceProperties.deviceName << std::endl;
-        }
-
-        vkDestroyInstance(instance, nullptr);
     }
 
     void displayDevices(VkInstance* instance) {
@@ -118,7 +63,6 @@ private:
         }
     }
 
-    // функция выбора устройства
     VkPhysicalDevice selectDevice(VkInstance* instance) {
 
         uint32_t deviceCount = 0;
@@ -142,6 +86,46 @@ private:
                 return device;
         }
         return VK_NULL_HANDLE;
+    }
+
+    void initVulkan() {
+        createInstance();
+    }
+
+    void createInstance() {
+        VkApplicationInfo appInfo{};
+        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.pApplicationName = "Hello Triangle";
+        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.pEngineName = "No Engine";
+        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.apiVersion = VK_API_VERSION_1_0;
+    }
+
+    void mainLoop() {
+        std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+
+        while (i != 2'250'000'000) {
+            i++;
+        }
+
+        std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+
+        auto elapsed = duration_cast<std::chrono::milliseconds>(end - start);
+
+        std::cout << "Elapsed Time: " << elapsed.count() / 1000 << "." << elapsed.count() % 1000 << "s";
+
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+        }
+    }
+
+    void cleanup() {
+        vkDestroyInstance(instance, nullptr);
+
+        glfwDestroyWindow(window);
+
+        glfwTerminate();
     }
 };
 
