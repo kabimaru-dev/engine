@@ -57,6 +57,7 @@ private:
         createInstance();
         setupDebugMessenger();
         pickPhysicalDevice();
+        createLogicalDevice();
     }
 
     void createInstance() {
@@ -127,6 +128,12 @@ private:
         else {
             throw std::runtime_error("failed to find a suitable GPU!");
         }
+    }
+
+    void createLogicalDevice() {
+        VkPhysicalDeviceFeatures deviceFeatures{};
+        VkDeviceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     }
 
     int rateDeviceSuitability(VkPhysicalDevice device) {
