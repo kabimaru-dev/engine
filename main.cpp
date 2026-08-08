@@ -26,7 +26,7 @@ public:
 private:
     GLFWwindow* window;
     VkInstance instance;
-    int i = 0;
+    uint32_t i = 0;
 
     void initWindow() {
         glfwInit();
@@ -39,24 +39,23 @@ private:
 
     void initVulkan() {
         createInstance();
-
-        //// main code
-        //glm::mat4 matrix;
-        //glm::vec4 vec;
-        //auto test = matrix * vec;
-        //// main code
-        //printf("Hello, World!");
     }
 
     int mainLoop() {
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
 
-            std::cout << std::chrono::system_clock::now() << std::endl;
-            while (i != 2'000'000'000) {
+            std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
+
+            while (i != 2'250'000'000) {
                 i++;
             }
-            std::cout << std::chrono::system_clock::now() << std::endl;
+
+            std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+
+            auto elapsed = duration_cast<std::chrono::milliseconds>(end - start);
+
+            std::cout << "Elapsed Time: " << elapsed.count() / 1000 << "." << elapsed.count() % 1000 << "s";
 
             return EXIT_SUCCESS;
         }
