@@ -150,9 +150,9 @@ private:
     }
 
     void createLogicalDevice() {
-        VkPhysicalDeviceFeatures deviceFeatures{};
-        VkDeviceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        // VkPhysicalDeviceFeatures deviceFeatures{};
+        // VkDeviceCreateInfo createInfo{};
+        // createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     }
 
     int rateDeviceSuitability(VkPhysicalDevice device) {
@@ -171,20 +171,21 @@ private:
 
     void mainLoop() {
         std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
-
+        
         while (i != 500'000) {
             i++;
         }
-
+        
         std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
 
         auto elapsed = duration_cast<std::chrono::milliseconds>(end - start);
 
-        std::cout << "Elapsed Time: " << elapsed.count() / 1000 << "." << elapsed.count() % 1000 << "s";
-
-        while (!glfwWindowShouldClose(window)) {
-            glfwPollEvents();
-        }
+        std::cout << "Elapsed Time: " << elapsed.count() / 1000 << "." << elapsed.count() % 1000 << "s" << std::endl;
+        
+        std::cout << "mainLoop: work" << std::endl;
+        // while (!glfwWindowShouldClose(window)) {
+        //     glfwPollEvents();
+        // }
     }
 
     void cleanup() {
