@@ -109,17 +109,17 @@ private:
     }
 
     void createSurface() {
-        VkWin32SurfaceCreateInfoKHR createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        createInfo.hwnd = glfwGetWin32Window(window);
-        createInfo.hinstance = GetModuleHandle(nullptr);
+        // VkWin32SurfaceCreateInfoKHR createInfo{};
+        // createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+        // createInfo.hwnd = glfwGetWin32Window(window);
+        // createInfo.hinstance = GetModuleHandle(nullptr);
 
-        if (vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create window surface!");
-        }
-        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create window surface!");
-        }
+        // if (vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS) {
+        //     throw std::runtime_error("failed to create window surface!");
+        // }
+        // if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
+        //     throw std::runtime_error("failed to create window surface!");
+        // }
     }
 
     void pickPhysicalDevice() {
@@ -172,7 +172,7 @@ private:
     void mainLoop() {
         std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
 
-        while (i != 2'250'000'000) {
+        while (i != 500'000) {
             i++;
         }
 
