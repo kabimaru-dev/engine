@@ -155,9 +155,9 @@ private:
         // createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     }
 
-    int rateDeviceSuitability(VkPhysicalDevice device) {
+    // int rateDeviceSuitability(VkPhysicalDevice device) {
 
-    }
+    // }
 
     bool isDeviceSuitable(VkPhysicalDevice device) {
         QueueFamilyIndices indices = findQueueFamilies(device);
@@ -172,7 +172,7 @@ private:
     void mainLoop() {
         std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
         
-        while (i != 500'000) {
+        while (i != 200'000'000) {
             i++;
         }
         
@@ -183,9 +183,9 @@ private:
         std::cout << "Elapsed Time: " << elapsed.count() / 1000 << "." << elapsed.count() % 1000 << "s" << std::endl;
         
         std::cout << "mainLoop: work" << std::endl;
-        // while (!glfwWindowShouldClose(window)) {
-        //     glfwPollEvents();
-        // }
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+        }
     }
 
     void cleanup() {
