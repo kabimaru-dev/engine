@@ -113,12 +113,26 @@ private:
         std::cout << "size: " << w << "x" << h << " visible: " << glfwGetWindowAttrib(window, GLFW_VISIBLE) << std::endl;
     }
 
-    void initVulkan() {   
+    void initVulkan() {
+        extensionsInfo();  
         createInstance();
         setupDebugMessenger();
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
+    }
+    
+    void extensionsInfo() {
+        uint32_t extension{};
+        vkEnumerateInstanceExtensionProperties(nullptr, &extension, nullptr);
+        std::cout << "0. extensionsInfo: " << std::endl <<
+            "  Count: " << extension << std::endl <<
+            "    Names: " << std::endl;
+        std::vector<VkExtensionProperties> extensions(extension);
+        vkEnumerateInstanceExtensionProperties(nullptr, &extension, extensions.data());
+        for (const auto& count : extensions) {
+            std::cout << "      " << count.extensionName << std::endl;
+        }
     }
 
     void createInstance() {
