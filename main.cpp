@@ -44,6 +44,7 @@ public:
 
 private:
     GLFWwindow* window;
+    VkDevice device;
     VkInstance instance;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkSurfaceKHR surface;
@@ -100,12 +101,12 @@ private:
             std::cout << "failed to create instance!" << std::endl;
         }
 
-        std::cout << "1. createInstance: " << "okay" << std::endl;
+        std::cout << "1. createInstance: " << "enable" << std::endl;
     }
 
     void setupDebugMessenger() {
         if (!enableValidationLayers) return;
-        std::cout << "2. setupDebugMessenger: " << "pass" << std::endl;
+        std::cout << "2. setupDebugMessenger: " << "disable" << std::endl;
     }
 
     void createSurface() {
@@ -150,6 +151,13 @@ private:
     }
 
     void createLogicalDevice() {
+        QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+        queueCreateInfo.queueCount = 1;
+
         // VkPhysicalDeviceFeatures deviceFeatures{};
         // VkDeviceCreateInfo createInfo{};
         // createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -180,9 +188,9 @@ private:
 
         auto elapsed = duration_cast<std::chrono::milliseconds>(end - start);
 
-        std::cout << "Elapsed Time: " << elapsed.count() / 1000 << "." << elapsed.count() % 1000 << "s" << std::endl;
+        std::cout << "Run a task: " << elapsed.count() / 1000 << "." << elapsed.count() % 1000 << "s (elapsed)" << std::endl;
         
-        std::cout << "mainLoop: work" << std::endl;
+        std::cout << "Main Loop: run" << std::endl;
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
         }
@@ -199,7 +207,6 @@ private:
 
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
         QueueFamilyIndices indices;
-        // Assign index to queue families that could be found
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
