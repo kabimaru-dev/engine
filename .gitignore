@@ -1,4 +1,5 @@
-./main
+main
 ./my_script_run.sh
-./glfw-3.5.1
-./.vscode
+./CMakeLists.txt
+glfw-3.5.1/
+.vscode/

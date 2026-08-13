@@ -11,6 +11,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <cstdio>
 
 #include <map>
 #include <set>
@@ -26,6 +27,17 @@ const std::vector<const char*> validationLayers = {
 const std::vector<const char*> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
+
+const char* platformName(int p) {
+    switch (p) {
+        case GLFW_PLATFORM_WIN32:   return "Win32";
+        case GLFW_PLATFORM_COCOA:   return "Cocoa";
+        case GLFW_PLATFORM_WAYLAND: return "Wayland";
+        case GLFW_PLATFORM_X11:     return "X11";
+        case GLFW_PLATFORM_NULL:    return "Null";
+        default:                    return "unknown";
+    }
+}
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -59,15 +71,40 @@ private:
     };
 
     void initWindow() {
+        glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+
+        if (!glfwInit()) {
+            std::cout << "glfwInit FAILED" << std::endl;
+        }
+        
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        
+        int platform = glfwGetPlatform();
+        std::cout << "GLFW using: " << platformName(platform) << std::endl;
+        
+        int monitorCount;     
+        GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);     
+        std::cout << "Monitors found: " << monitorCount << std::endl;
+        for (int i = 0; i < monitorCount; i++) {         
+            const GLFWvidmode* mode = glfwGetVideoMode(monitors[i]);         
+            std::cout << "  Monitor "<< i << ": " << mode->width << "x" << mode->height << std::endl;     
+        }
+
         glfwInit();
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan window", nullptr, nullptr);
+
+        if (!window) {
+            std::cout << "glfwCreateWindow FAILED" << std::endl;
+            glfwTerminate();
+        }
     }
 
-    void initVulkan() {
+    void initVulkan() {   
         createInstance();
         setupDebugMessenger();
         createSurface();
@@ -163,10 +200,6 @@ private:
         // createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     }
 
-    // int rateDeviceSuitability(VkPhysicalDevice device) {
-
-    // }
-
     bool isDeviceSuitable(VkPhysicalDevice device) {
         QueueFamilyIndices indices = findQueueFamilies(device);
 
@@ -178,6 +211,19 @@ private:
     }
 
     void mainLoop() {
+        std::cout << "Window OK, wait 5 seconds: ";
+        
+        double elapse = glfwGetTime() + 5.0;
+        while (glfwGetTime() < elapse) {
+            glfwPollEvents();
+            if (glfwWindowShouldClose(window)) break;
+        }
+        
+        std::cout << "Done" << std::endl;
+        
+
+
+
         std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
         
         while (i != 200'000'000) {
@@ -189,8 +235,12 @@ private:
         auto elapsed = duration_cast<std::chrono::milliseconds>(end - start);
 
         std::cout << "Run a task: " << elapsed.count() / 1000 << "." << elapsed.count() % 1000 << "s (elapsed)" << std::endl;
-        
+
+
+
+
         std::cout << "Main Loop: run" << std::endl;
+
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
         }
