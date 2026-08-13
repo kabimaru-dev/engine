@@ -1,1 +1,4 @@
 ./main
+./my_script_run.sh
+./glfw-3.5.1
+./.vscode
