@@ -1,5 +1,7 @@
 main
-./my_script_run.sh
-./CMakeLists.txt
+my_script_run.sh
+CMakeLists.txt
 glfw-3.5.1/
 .vscode/
+wayland/
+mesa/

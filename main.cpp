@@ -1,3 +1,7 @@
+#include <wayland-client.h>
+#include <vulkan/vulkan.h> 
+#include <vulkan/vulkan_wayland.h>
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -71,6 +75,8 @@ private:
     };
 
     void initWindow() {
+        wl_display* display = wl_display_connect(nullptr);
+
         glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
 
         if (!glfwInit()) {
@@ -102,6 +108,9 @@ private:
             std::cout << "glfwCreateWindow FAILED" << std::endl;
             glfwTerminate();
         }
+
+        int w,h; glfwGetWindowSize(window,&w,&h); 
+        std::cout << "size: " << w << "x" << h << " visible: " << glfwGetWindowAttrib(window, GLFW_VISIBLE) << std::endl;
     }
 
     void initVulkan() {   
@@ -147,6 +156,7 @@ private:
     }
 
     void createSurface() {
+        std::cout << "3. createSurface: in-process-coding-please-wait" << std::endl;
         // VkWin32SurfaceCreateInfoKHR createInfo{};
         // createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         // createInfo.hwnd = glfwGetWin32Window(window);
@@ -182,7 +192,7 @@ private:
                 }
             }
 
-        std::cout << "3. pickPhysicalDevice: " << deviceProperties.deviceName << std::endl;
+        std::cout << "4. pickPhysicalDevice: " << deviceProperties.deviceName << std::endl;
 
         if (physicalDevice == VK_NULL_HANDLE) throw std::runtime_error("failed to find a suitable GPU!");
     }
@@ -194,7 +204,8 @@ private:
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
         queueCreateInfo.queueCount = 1;
-
+        
+        std::cout << "5. createLogicalDevice: only QueueFamilyIndices is run" << std::endl;
         // VkPhysicalDeviceFeatures deviceFeatures{};
         // VkDeviceCreateInfo createInfo{};
         // createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
