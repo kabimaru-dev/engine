@@ -52,10 +52,14 @@ const bool enableValidationLayers = true;
 class HelloTriangleApplication {
 public:
     void run() {
+        extensionsInfo();
+
         initWindow();
         initVulkan();
         mainLoop();
         cleanup();
+
+        daemonDebuger();
     }
 
 private:
@@ -65,13 +69,21 @@ private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkSurfaceKHR surface;
     VkDebugUtilsMessengerEXT debugMessenger;
-    VkInstanceCreateInfo createInfo{};
     uint32_t i = 0;
     VkPhysicalDeviceProperties deviceProperties;
     VkPhysicalDeviceFeatures deviceFeatures;
+    VkQueue presentQueue;
+
+    std::vector<bool> isDone;
+    std::vector<std::string> nameFunction;
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> presentFamily;
+
+        bool isComplete() {
+            return graphicsFamily.has_value() && presentFamily.has_value();
+        }
     };
 
     void initWindow() {
@@ -114,7 +126,6 @@ private:
     }
 
     void initVulkan() {
-        extensionsInfo();  
         createInstance();
         setupDebugMessenger();
         createSurface();
@@ -133,6 +144,8 @@ private:
         for (const auto& count : extensions) {
             std::cout << "      " << count.extensionName << std::endl;
         }
+        
+        isDone.push_back(true); nameFunction.push_back("extensionsInfo");
     }
 
     void createInstance() {
@@ -144,44 +157,36 @@ private:
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-
+        VkInstanceCreateInfo instanceInfo{};
+        instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        instanceInfo.pApplicationInfo = &appInfo;
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions;
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-        createInfo.enabledExtensionCount = glfwExtensionCount;
-        createInfo.ppEnabledExtensionNames = glfwExtensions;
-
-        createInfo.enabledLayerCount = 0;
-
-        if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+        instanceInfo.enabledExtensionCount = glfwExtensionCount;
+        instanceInfo.ppEnabledExtensionNames = glfwExtensions;
+        instanceInfo.enabledLayerCount = 0;
+        if (vkCreateInstance(&instanceInfo, nullptr, &instance) != VK_SUCCESS) {
             std::cout << "failed to create instance!" << std::endl;
         }
 
         std::cout << "1. createInstance: " << "enable" << std::endl;
+        isDone.push_back(true); nameFunction.push_back("createInstance");
     }
 
     void setupDebugMessenger() {
         if (!enableValidationLayers) return;
-        std::cout << "2. setupDebugMessenger: " << "disable" << std::endl;
+        std::cout << "2. setupDebugMessenger: " << "custom" << std::endl;
+        isDone.push_back(true); nameFunction.push_back("setupDebugMessenger");
     }
 
     void createSurface() {
-        std::cout << "3. createSurface: in-process-coding-please-wait" << std::endl;
-        // VkWin32SurfaceCreateInfoKHR createInfo{};
-        // createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        // createInfo.hwnd = glfwGetWin32Window(window);
-        // createInfo.hinstance = GetModuleHandle(nullptr);
-
-        // if (vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS) {
-        //     throw std::runtime_error("failed to create window surface!");
-        // }
-        // if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
-        //     throw std::runtime_error("failed to create window surface!");
-        // }
+        std::cout << "3. createSurface: ";
+        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create window surface!");
+        }
+        std::cout << "ok" << std::endl;
+        isDone.push_back(true); nameFunction.push_back("createSurface");
     }
 
     void pickPhysicalDevice() {
@@ -209,29 +214,44 @@ private:
         std::cout << "4. pickPhysicalDevice: " << deviceProperties.deviceName << std::endl;
 
         if (physicalDevice == VK_NULL_HANDLE) throw std::runtime_error("failed to find a suitable GPU!");
+        isDone.push_back(true); nameFunction.push_back("pickPhysicalDevice");
     }
 
     void createLogicalDevice() {
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-        queueCreateInfo.queueCount = 1;
-        
+
+        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+        std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+
+        float queuePriority = 1.0f;
+        for (uint32_t queueFamily : uniqueQueueFamilies) {
+            VkDeviceQueueCreateInfo queueCreateInfo{};
+            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueCreateInfo.queueFamilyIndex = queueFamily;
+            queueCreateInfo.queueCount = 1;
+            queueCreateInfo.pQueuePriorities = &queuePriority;
+            queueCreateInfos.push_back(queueCreateInfo);
+
+            // VkDeviceCreateInfo deviceInfo{};
+            // createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+            // createInfo.pQueueCreateInfos = queueCreateInfos.data();
+            // vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
+        }
+
         std::cout << "5. createLogicalDevice: only QueueFamilyIndices is run" << std::endl;
-        // VkPhysicalDeviceFeatures deviceFeatures{};
-        // VkDeviceCreateInfo createInfo{};
-        // createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        isDone.push_back(true); nameFunction.push_back("createLogicalDevice");
     }
 
     bool isDeviceSuitable(VkPhysicalDevice device) {
         QueueFamilyIndices indices = findQueueFamilies(device);
 
+        isDone.push_back(true); nameFunction.push_back("isDeviceSuitable");
         return indices.graphicsFamily.has_value();
     }
 
     bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
+        isDone.push_back(true); nameFunction.push_back("checkDeviceExtensionSupport");
         return true;
     }
 
@@ -245,9 +265,6 @@ private:
         }
         
         std::cout << "Done" << std::endl;
-        
-
-
 
         std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
         
@@ -261,14 +278,13 @@ private:
 
         std::cout << "Run a task: " << elapsed.count() / 1000 << "." << elapsed.count() % 1000 << "s (elapsed)" << std::endl;
 
+        std::cout << "Main Loop: skip" << std::endl;
 
+        // while (!glfwWindowShouldClose(window)) {
+        //     glfwPollEvents();
+        // }
 
-
-        std::cout << "Main Loop: run" << std::endl;
-
-        while (!glfwWindowShouldClose(window)) {
-            glfwPollEvents();
-        }
+        isDone.push_back(true); nameFunction.push_back("mainLoop");
     }
 
     void cleanup() {
@@ -278,9 +294,13 @@ private:
         glfwDestroyWindow(window);
 
         glfwTerminate();
+        isDone.push_back(true); nameFunction.push_back("cleanup");
     }
 
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+
         QueueFamilyIndices indices;
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
@@ -298,7 +318,20 @@ private:
             i++;
         }
 
+        if (presentSupport) {
+            indices.presentFamily = i;
+        }
+        
+        isDone.push_back(true); nameFunction.push_back("findQueueFamilies");
         return indices;
+    }
+
+    void daemonDebuger() {
+        std::cout << "Hi, I'am master daemon debbuger, result:" << std::endl;
+        for(int i = 0; i < isDone.size(); i++) {
+            std::cout << "index(" << i << ")" << "bool(" << isDone[i] << ")" << "Function Name: " << nameFunction[i] << std::endl; 
+        }
+        std::cout << "Everything is runnable fine, but run doesn't mean you hasn't bugs!!!" << std::endl;
     }
 };
 
