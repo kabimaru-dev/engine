@@ -65,6 +65,7 @@ public:
 private:
     GLFWwindow* window;
     VkDevice device;
+    VkResult result;
     VkInstance instance;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkSurfaceKHR surface;
@@ -73,6 +74,12 @@ private:
     VkPhysicalDeviceProperties deviceProperties;
     VkPhysicalDeviceFeatures deviceFeatures;
     VkQueue presentQueue;
+
+    VkSwapchainKHR     swapChain; 
+    std::vector<VkImage>       swapChainImages; 
+    std::vector<VkImageView>   swapChainImageViews; 
+    VkFormat           swapChainImageFormat; 
+    VkExtent2D         swapChainExtent;
 
     std::vector<bool> isDone;
     std::vector<std::string> nameFunction;
@@ -227,6 +234,8 @@ private:
     }
 
     void createLogicalDevice() {
+        std::cout << "5. createLogicalDevice: ";
+
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
 
@@ -244,8 +253,12 @@ private:
             
             VkDeviceCreateInfo createInfo{};
 
-            if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+            result = vkCreateDevice(physicalDevice, &createInfo, nullptr, &device);
+
+            if (result != VK_SUCCESS) {
                 throw std::runtime_error("failed to create logical device!");
+            } else {
+                std::cout << "Success - result = " << result << std::endl;
             }
             
             createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -259,20 +272,32 @@ private:
 
             vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);  
         }
-
-        std::cout << "5. createLogicalDevice: unknown" << std::endl;
+        
         isDone.push_back(true); nameFunction.push_back("createLogicalDevice");
     }
 
     void createSwapChain() {
-        // SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+        VkSurfaceCapabilitiesKHR caps; vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &caps); uint32_t fN = 0; vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &fN, nullptr);
+        std::vector<VkSurfaceFormatKHR> formats(fN); vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &fN, formats.data()); uint32_t pN = 0; vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &pN, nullptr); std::vector<VkPresentModeKHR> presentModes(pN);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &pN, presentModes.data());
 
-        // VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-        // VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-        // VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+        VkSurfaceFormatKHR fmt = formats[0]; for (const auto& f : formats) if (f.format == VK_FORMAT_B8G8R8A8_SRGB && f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) fmt = f;
 
-        std::cout << "6. createSwapChain: undefined" << std::endl;
-        isDone.push_back(true); nameFunction.push_back("createSwapChain");
+        VkPresentModeKHR pm = VK_PRESENT_MODE_FIFO_KHR; for (const auto& m : presentModes) if (m == VK_PRESENT_MODE_MAILBOX_KHR) { pm = m; break; }
+
+        VkExtent2D ext = caps.currentExtent; if (ext.width == 0xFFFFFFFF) { ext.width  = std::clamp((uint32_t)WIDTH,  caps.minImageExtent.width,  caps.maxImageExtent.width); ext.height = std::clamp((uint32_t)HEIGHT, caps.minImageExtent.height, caps.maxImageExtent.height); }
+
+        uint32_t imgCount = caps.minImageCount + 1; if (caps.maxImageCount > 0 && imgCount > caps.maxImageCount) imgCount = caps.maxImageCount;
+
+        VkSwapchainCreateInfoKHR ci{}; ci.sType   = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR; ci.surface = surface; ci.minImageCount    = imgCount; ci.imageFormat      = fmt.format; ci.imageColorSpace  = fmt.colorSpace; ci.imageExtent      = ext; ci.imageArrayLayers = 1; ci.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; ci.preTransform     = caps.currentTransform; ci.compositeAlpha   = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; ci.presentMode      = pm; ci.clipped          = VK_TRUE; ci.oldSwapchain     = VK_NULL_HANDLE;
+
+        if (vkCreateSwapchainKHR(device, &ci, nullptr, &swapChain) != VK_SUCCESS) throw std::runtime_error("failed to create swap chain!");
+
+        vkGetSwapchainImagesKHR(device, swapChain, &imgCount, nullptr); swapChainImages.resize(imgCount); vkGetSwapchainImagesKHR(device, swapChain, &imgCount, swapChainImages.data());
+
+        swapChainImageViews.resize(swapChainImages.size()); for (size_t i = 0; i < swapChainImages.size(); i++) { VkImageViewCreateInfo vi{}; vi.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; vi.image    = swapChainImages[i]; vi.viewType = VK_IMAGE_VIEW_TYPE_2D; vi.format   = fmt.format; vi.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }; vkCreateImageView(device, &vi, nullptr, &swapChainImageViews[i]); }
+
+        swapChainImageFormat = fmt.format; swapChainExtent      = ext;
     }
 
     bool isDeviceSuitable(VkPhysicalDevice device) {
@@ -324,11 +349,13 @@ private:
 
         std::cout << "Run a task: " << elapsed.count() / 1000 << "." << elapsed.count() % 1000 << "s (elapsed)" << std::endl;
 
-        std::cout << "Main Loop: skip" << std::endl;
+        std::cout << "Main Loop: run" << std::endl;
 
-        // while (!glfwWindowShouldClose(window)) {
-        //     glfwPollEvents();
-        // }
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+            // drawFrame();
+            if (glfwWindowShouldClose(window)) break;
+        }
 
         isDone.push_back(true); nameFunction.push_back("mainLoop");
     }
