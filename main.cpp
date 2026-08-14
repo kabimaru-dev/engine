@@ -1,7 +1,3 @@
-// #include <wayland-client.h>
-// #include <vulkan/vulkan.h> 
-// #include <vulkan/vulkan_wayland.h>
-
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -100,8 +96,6 @@ private:
     };
 
     void initWindow() {
-        // wl_display* display = wl_display_connect(nullptr);
-
         glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
 
         if (!glfwInit()) {
