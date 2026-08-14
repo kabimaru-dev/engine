@@ -129,6 +129,8 @@ private:
 
         int w,h; glfwGetWindowSize(window,&w,&h); 
         std::cout << "size: " << w << "x" << h << " visible: " << glfwGetWindowAttrib(window, GLFW_VISIBLE) << std::endl;
+
+        isDone.push_back(true); nameFunction.push_back("initWindow");
     }
 
     void initVulkan() {
@@ -270,6 +272,7 @@ private:
         // VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
         std::cout << "6. createSwapChain: undefined" << std::endl;
+        isDone.push_back(true); nameFunction.push_back("createSwapChain");
     }
 
     bool isDeviceSuitable(VkPhysicalDevice device) {
@@ -372,6 +375,7 @@ private:
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) {
         SwapChainSupportDetails details;
 
+        isDone.push_back(true); nameFunction.push_back("querySwapChainSupport");
         return details;
     }
 
