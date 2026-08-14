@@ -28,10 +28,6 @@ const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
 
-const std::vector<const char*> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
-
 const char* platformName(int p) {
     switch (p) {
         case GLFW_PLATFORM_WIN32:   return "Win32";
@@ -42,6 +38,10 @@ const char* platformName(int p) {
         default:                    return "unknown";
     }
 }
+
+const std::vector<const char*> deviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -59,7 +59,7 @@ public:
         mainLoop();
         cleanup();
 
-        daemonDebuger();
+        daemonDebbuger();
     }
 
 private:
@@ -84,6 +84,12 @@ private:
         bool isComplete() {
             return graphicsFamily.has_value() && presentFamily.has_value();
         }
+    };
+
+    struct SwapChainSupportDetails {
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
     };
 
     void initWindow() {
@@ -131,6 +137,7 @@ private:
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
+        createSwapChain();
     }
     
     void extensionsInfo() {
@@ -248,16 +255,40 @@ private:
         isDone.push_back(true); nameFunction.push_back("createLogicalDevice");
     }
 
+    void createSwapChain() {
+        // SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+
+        // VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+        // VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+        // VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+
+        std::cout << "6. createSwapChain: not created" << std::endl;
+    }
+
     bool isDeviceSuitable(VkPhysicalDevice device) {
         QueueFamilyIndices indices = findQueueFamilies(device);
 
+        bool extensionsSupported = checkDeviceExtensionSupport(device);
+
         isDone.push_back(true); nameFunction.push_back("isDeviceSuitable");
-        return indices.graphicsFamily.has_value();
+        return indices.isComplete() && extensionsSupported;
     }
 
     bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
+        uint32_t extensionCount;
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+
+        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+
+        for (const auto& extension : availableExtensions) {
+            requiredExtensions.erase(extension.extensionName);
+        }
+
         isDone.push_back(true); nameFunction.push_back("checkDeviceExtensionSupport");
-        return true;
+        return requiredExtensions.empty();
     }
 
     void mainLoop() {
@@ -331,7 +362,13 @@ private:
         return indices;
     }
 
-    void daemonDebuger() {
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) {
+        SwapChainSupportDetails details;
+
+        return details;
+    }
+
+    void daemonDebbuger() {
         std::cout << "Hi, I'am master daemon debbuger, result:" << std::endl;
         for(int i = 0; i < isDone.size(); i++) {
             std::cout << "index(" << i << ")" << "bool(" << isDone[i] << ")" << "Function Name: " << nameFunction[i] << std::endl; 
