@@ -277,6 +277,8 @@ private:
 
     void createSwapChain() {
         std::cout << "6. createSwapChain: try" << std::endl;
+        PFN_vkCreateSwapchainKHR pfnCreate = (PFN_vkCreateSwapchainKHR)vkGetDeviceProcAddr(device, "vkCreateSwapchainKHR");     std::cout << "vkCreateSwapchainKHR address: " << (void*)pfnCreate << std::endl;         if (pfnCreate == nullptr) {         std::cout << "FATAL: VK_KHR_swapchain not loaded!" << std::endl;         return;     }
+
         std::cout << "physicalDevice: " << physicalDevice << std::endl;     std::cout << "device: " << device << std::endl;     std::cout << "surface: " << surface << std::endl;
 
         std::cout << "  Test, step 1" << std::endl;
@@ -293,6 +295,8 @@ private:
         std::cout << "    Step 5" << std::endl; uint32_t imgCount = caps.minImageCount + 1; if (caps.maxImageCount > 0 && imgCount > caps.maxImageCount) imgCount = caps.maxImageCount;
 
         std::cout << "    Step 6" << std::endl; VkSwapchainCreateInfoKHR ci{}; ci.sType   = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR; ci.surface = surface; ci.minImageCount    = imgCount; ci.imageFormat      = fmt.format; ci.imageColorSpace  = fmt.colorSpace; ci.imageExtent      = ext; ci.imageArrayLayers = 1; ci.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; ci.preTransform     = caps.currentTransform; ci.compositeAlpha   = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; ci.presentMode      = pm; ci.clipped          = VK_TRUE; ci.oldSwapchain     = VK_NULL_HANDLE;
+
+        daemonDebbugerSwapChain(ci);
 
         std::cout << "    Step 7" << std::endl; if (vkCreateSwapchainKHR(device, &ci, nullptr, &swapChain) != VK_SUCCESS) throw std::runtime_error("failed to create swap chain!");
         
@@ -422,6 +426,25 @@ private:
         }
         std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
         std::cout << "Everything is runnable fine, but run doesn't mean you hasn't bugs!!!" << std::endl;
+        std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
+    }
+    void daemonDebbugerSwapChain(VkSwapchainCreateInfoKHR ci) {
+        std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
+        std::cout << "ci.sType: " << ci.sType << " (expected " << VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR << ")" << std::endl;
+        std::cout << "ci.surface: " << ci.surface << std::endl;
+        std::cout << "ci.minImageCount: " << ci.minImageCount << std::endl;
+        std::cout << "ci.imageFormat: " << ci.imageFormat << std::endl;
+        std::cout << "ci.imageColorSpace: " << ci.imageColorSpace << std::endl;
+        std::cout << "ci.imageExtent.width: " << ci.imageExtent.width << std::endl;
+        std::cout << "ci.imageExtent.height: " << ci.imageExtent.height << std::endl;
+        std::cout << "ci.imageArrayLayers: " << ci.imageArrayLayers << std::endl;
+        std::cout << "ci.imageUsage: " << ci.imageUsage << std::endl;
+        std::cout << "ci.preTransform: " << ci.preTransform << std::endl;
+        std::cout << "ci.compositeAlpha: " << ci.compositeAlpha << std::endl;
+        std::cout << "ci.presentMode: " << ci.presentMode << std::endl;
+        std::cout << "ci.clipped: " << ci.clipped << std::endl;
+        std::cout << "ci.oldSwapchain: " << ci.oldSwapchain << std::endl;
+        std::cout << "swapChain (out param): " << &swapChain << std::endl;
         std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
     }
 };
