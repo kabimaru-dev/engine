@@ -251,7 +251,12 @@ private:
             queueCreateInfo.pQueuePriorities = &queuePriority;
             queueCreateInfos.push_back(queueCreateInfo);
             
+            const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
             VkDeviceCreateInfo createInfo{};
+
+            createInfo.enabledExtensionCount = 1;
+            createInfo.ppEnabledExtensionNames = deviceExtensions;
 
             result = vkCreateDevice(physicalDevice, &createInfo, nullptr, &device);
 
@@ -263,12 +268,6 @@ private:
             
             createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
             createInfo.pQueueCreateInfos = queueCreateInfos.data();
-            
-            // Swap Chain
-            const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME }; 
-            createInfo.enabledExtensionCount = 1; 
-            createInfo.ppEnabledExtensionNames = deviceExtensions;
-            // Swap Chain
 
             vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);  
         }
@@ -277,27 +276,34 @@ private:
     }
 
     void createSwapChain() {
+        std::cout << "6. createSwapChain: try" << std::endl;
+        std::cout << "physicalDevice: " << physicalDevice << std::endl;     std::cout << "device: " << device << std::endl;     std::cout << "surface: " << surface << std::endl;
+
+        std::cout << "  Test, step 1" << std::endl;
         VkSurfaceCapabilitiesKHR caps; vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &caps); uint32_t fN = 0; vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &fN, nullptr);
         std::vector<VkSurfaceFormatKHR> formats(fN); vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &fN, formats.data()); uint32_t pN = 0; vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &pN, nullptr); std::vector<VkPresentModeKHR> presentModes(pN);
         vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &pN, presentModes.data());
 
-        VkSurfaceFormatKHR fmt = formats[0]; for (const auto& f : formats) if (f.format == VK_FORMAT_B8G8R8A8_SRGB && f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) fmt = f;
+        std::cout << "    Step 2" << std::endl; VkSurfaceFormatKHR fmt = formats[0]; for (const auto& f : formats) if (f.format == VK_FORMAT_B8G8R8A8_SRGB && f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) fmt = f;
 
-        VkPresentModeKHR pm = VK_PRESENT_MODE_FIFO_KHR; for (const auto& m : presentModes) if (m == VK_PRESENT_MODE_MAILBOX_KHR) { pm = m; break; }
+        std::cout << "    Step 3" << std::endl; VkPresentModeKHR pm = VK_PRESENT_MODE_FIFO_KHR; for (const auto& m : presentModes) if (m == VK_PRESENT_MODE_MAILBOX_KHR) { pm = m; break; }
 
-        VkExtent2D ext = caps.currentExtent; if (ext.width == 0xFFFFFFFF) { ext.width  = std::clamp((uint32_t)WIDTH,  caps.minImageExtent.width,  caps.maxImageExtent.width); ext.height = std::clamp((uint32_t)HEIGHT, caps.minImageExtent.height, caps.maxImageExtent.height); }
+        std::cout << "    Step 4" << std::endl; VkExtent2D ext = caps.currentExtent; if (ext.width == 0xFFFFFFFF) { ext.width  = std::clamp((uint32_t)WIDTH,  caps.minImageExtent.width,  caps.maxImageExtent.width); ext.height = std::clamp((uint32_t)HEIGHT, caps.minImageExtent.height, caps.maxImageExtent.height); }
 
-        uint32_t imgCount = caps.minImageCount + 1; if (caps.maxImageCount > 0 && imgCount > caps.maxImageCount) imgCount = caps.maxImageCount;
+        std::cout << "    Step 5" << std::endl; uint32_t imgCount = caps.minImageCount + 1; if (caps.maxImageCount > 0 && imgCount > caps.maxImageCount) imgCount = caps.maxImageCount;
 
-        VkSwapchainCreateInfoKHR ci{}; ci.sType   = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR; ci.surface = surface; ci.minImageCount    = imgCount; ci.imageFormat      = fmt.format; ci.imageColorSpace  = fmt.colorSpace; ci.imageExtent      = ext; ci.imageArrayLayers = 1; ci.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; ci.preTransform     = caps.currentTransform; ci.compositeAlpha   = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; ci.presentMode      = pm; ci.clipped          = VK_TRUE; ci.oldSwapchain     = VK_NULL_HANDLE;
+        std::cout << "    Step 6" << std::endl; VkSwapchainCreateInfoKHR ci{}; ci.sType   = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR; ci.surface = surface; ci.minImageCount    = imgCount; ci.imageFormat      = fmt.format; ci.imageColorSpace  = fmt.colorSpace; ci.imageExtent      = ext; ci.imageArrayLayers = 1; ci.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; ci.preTransform     = caps.currentTransform; ci.compositeAlpha   = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; ci.presentMode      = pm; ci.clipped          = VK_TRUE; ci.oldSwapchain     = VK_NULL_HANDLE;
 
-        if (vkCreateSwapchainKHR(device, &ci, nullptr, &swapChain) != VK_SUCCESS) throw std::runtime_error("failed to create swap chain!");
+        std::cout << "    Step 7" << std::endl; if (vkCreateSwapchainKHR(device, &ci, nullptr, &swapChain) != VK_SUCCESS) throw std::runtime_error("failed to create swap chain!");
+        
+        std::cout << "    Step 8" << std::endl; vkGetSwapchainImagesKHR(device, swapChain, &imgCount, nullptr); swapChainImages.resize(imgCount); vkGetSwapchainImagesKHR(device, swapChain, &imgCount, swapChainImages.data());
 
-        vkGetSwapchainImagesKHR(device, swapChain, &imgCount, nullptr); swapChainImages.resize(imgCount); vkGetSwapchainImagesKHR(device, swapChain, &imgCount, swapChainImages.data());
+        std::cout << "    Step 9" << std::endl; swapChainImageViews.resize(swapChainImages.size()); for (size_t i = 0; i < swapChainImages.size(); i++) { VkImageViewCreateInfo vi{}; vi.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; vi.image    = swapChainImages[i]; vi.viewType = VK_IMAGE_VIEW_TYPE_2D; vi.format   = fmt.format; vi.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }; vkCreateImageView(device, &vi, nullptr, &swapChainImageViews[i]); }
 
-        swapChainImageViews.resize(swapChainImages.size()); for (size_t i = 0; i < swapChainImages.size(); i++) { VkImageViewCreateInfo vi{}; vi.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; vi.image    = swapChainImages[i]; vi.viewType = VK_IMAGE_VIEW_TYPE_2D; vi.format   = fmt.format; vi.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }; vkCreateImageView(device, &vi, nullptr, &swapChainImageViews[i]); }
+        std::cout << "    Step 10" << std::endl; swapChainImageFormat = fmt.format; swapChainExtent      = ext;
 
-        swapChainImageFormat = fmt.format; swapChainExtent      = ext;
+        std::cout << "  createSwapChain: SUCCESS" << std::endl;
+        isDone.push_back(true); nameFunction.push_back("createSwapChain");
     }
 
     bool isDeviceSuitable(VkPhysicalDevice device) {
@@ -412,7 +418,7 @@ private:
         std::cout << "Hi, I'am master daemon debbuger, result:" << std::endl;
         std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
         for(int i = 0; i < isDone.size(); i++) {
-            std::cout << "    " << i << ". " << nameFunction[i] << " " << isDone[i] << std::endl; 
+            std::cout << "    id: " << i << " " << nameFunction[i] << " " << isDone[i] << std::endl; 
         }
         std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
         std::cout << "Everything is runnable fine, but run doesn't mean you hasn't bugs!!!" << std::endl;
