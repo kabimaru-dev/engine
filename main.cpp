@@ -248,10 +248,17 @@ private:
             
             createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
             createInfo.pQueueCreateInfos = queueCreateInfos.data();
+            
+            // Swap Chain
+            const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME }; 
+            createInfo.enabledExtensionCount = 1; 
+            createInfo.ppEnabledExtensionNames = deviceExtensions;
+            // Swap Chain
+
             vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);  
         }
 
-        std::cout << "5. createLogicalDevice: only QueueFamilyIndices is run" << std::endl;
+        std::cout << "5. createLogicalDevice: unknown" << std::endl;
         isDone.push_back(true); nameFunction.push_back("createLogicalDevice");
     }
 
@@ -262,7 +269,7 @@ private:
         // VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
         // VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
-        std::cout << "6. createSwapChain: not created" << std::endl;
+        std::cout << "6. createSwapChain: undefined" << std::endl;
     }
 
     bool isDeviceSuitable(VkPhysicalDevice device) {
