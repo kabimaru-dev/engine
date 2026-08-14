@@ -380,11 +380,16 @@ private:
     }
 
     void daemonDebbuger() {
+        std::cout << std::endl;
+        std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
         std::cout << "Hi, I'am master daemon debbuger, result:" << std::endl;
+        std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
         for(int i = 0; i < isDone.size(); i++) {
-            std::cout << "index(" << i << ")" << "bool(" << isDone[i] << ")" << "Function Name: " << nameFunction[i] << std::endl; 
+            std::cout << "    " << i << ". " << nameFunction[i] << " " << isDone[i] << std::endl; 
         }
+        std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
         std::cout << "Everything is runnable fine, but run doesn't mean you hasn't bugs!!!" << std::endl;
+        std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
     }
 };
 
