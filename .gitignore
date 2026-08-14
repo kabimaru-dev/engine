@@ -1,7 +1,12 @@
+# main
 main
+
+# scripts, etc.
 my_script_run.sh
 CMakeLists.txt
-glfw-3.5.1/
+Makefile
+run_me.sh
+
+# folders
 .vscode/
-wayland/
-mesa/
+libs/
