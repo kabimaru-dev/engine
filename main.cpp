@@ -214,11 +214,15 @@ private:
             if (isDeviceSuitable(device)) {
                 vkGetPhysicalDeviceProperties(device, &deviceProperties);
 
-                if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-                    VkPhysicalDevice selectDevice = device;
-                    physicalDevice = device;
-                    break;
-                }
+                // if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+                //     VkPhysicalDevice selectDevice = device;
+                //     physicalDevice = device;
+                //     break;
+                // }
+
+                VkPhysicalDevice selectDevice = device;
+                physicalDevice = device;
+                break;
             }
 
         std::cout << "4. pickPhysicalDevice: " << deviceProperties.deviceName << std::endl;

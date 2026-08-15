@@ -10,3 +10,4 @@ run_me.sh
 # folders
 .vscode/
 libs/
+build/
