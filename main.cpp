@@ -1,6 +1,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
+
+#include <iostream>
+#include <vector>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -8,7 +10,6 @@
 #include <glm/mat4x4.hpp>
 
 #include <chrono>
-#include <iostream>
 #include <stdexcept>
 #include <cstdlib>
 #include <cstdio>
@@ -44,6 +45,9 @@ const bool enableValidationLayers = false;
 #else
 const bool enableValidationLayers = true;
 #endif
+
+const char* NAME = "Hello Triangle";
+
 
 class HelloTriangleApplication {
 public:
@@ -97,39 +101,28 @@ private:
 
     void initWindow() {
         glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
-
-        if (!glfwInit()) {
-            std::cout << "glfwInit FAILED" << std::endl;
-        }
-        
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-        
-        int platform = glfwGetPlatform();
-        std::cout << "GLFW using: " << platformName(platform) << std::endl;
-        
-        int monitorCount;     
-        GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);     
-        std::cout << "Monitors found: " << monitorCount << std::endl;
-        for (int i = 0; i < monitorCount; i++) {         
-            const GLFWvidmode* mode = glfwGetVideoMode(monitors[i]);         
-            std::cout << "  Monitor "<< i << ": " << mode->width << "x" << mode->height << std::endl;     
-        }
-
         glfwInit();
 
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan window", nullptr, nullptr);
+        if (!glfwInit()) std::cout << "glfwInit: failed" << std::endl;
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        if (!monitor) std::cout << "monitor: failed" << std::endl;
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        if (!mode) std::cout << "mode: failed" << std::endl;
+        int platform = glfwGetPlatform();
+        if (!platform) std::cout << "platform: failed" << std::endl;
+        else std::cout << "GLFW using: " << platformName(platform) << std::endl;
 
-        if (!window) {
-            std::cout << "glfwCreateWindow FAILED" << std::endl;
-            glfwTerminate();
-        }
+        int monitorCount;
+        GLFWmonitor** monitors = glfwGetMonitors(&monitorCount);     
+        std::cout << "Monitors found: " << monitorCount << std::endl;
+        for (int i = 0; i < monitorCount; i++) { const GLFWvidmode* mode = glfwGetVideoMode(monitors[i]); std::cout << "  Monitor "<< i << ": " << mode->width << "x" << mode->height << std::endl; }
 
-        int w,h; glfwGetWindowSize(window,&w,&h); 
-        std::cout << "size: " << w << "x" << h << " visible: " << glfwGetWindowAttrib(window, GLFW_VISIBLE) << std::endl;
+        window = glfwCreateWindow(WIDTH, HEIGHT, NAME, nullptr, nullptr);
+        if (!window) std::cout << "glfwCreateWindow: failed" << std::endl;
+        std::cout << "size: " << WIDTH << "x" << HEIGHT << " visible: " << glfwGetWindowAttrib(window, GLFW_VISIBLE) << std::endl;
 
         isDone.push_back(true); nameFunction.push_back("initWindow");
     }
@@ -146,7 +139,7 @@ private:
     void extensionsInfo() {
         uint32_t extension{};
         vkEnumerateInstanceExtensionProperties(nullptr, &extension, nullptr);
-        std::cout << "0. extensionsInfo: " << std::endl <<
+        std::cout << "1. extensionsInfo: " << std::endl <<
             "  Count: " << extension << std::endl <<
             "    Names: " << std::endl;
         std::vector<VkExtensionProperties> extensions(extension);
@@ -159,39 +152,49 @@ private:
     }
 
     void createInstance() {
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+        // std::vector<const char*> exceptions();
+
+        for(int i = 0; i < glfwExtensionCount; i++) { std::cout << glfwExtensions[i] << std::endl; if (glfwExtensions[i] == "VK_KHR_wayland_surface") {
+            std::cout << "I'm Wayland" << std::endl;
+        } }
+            
+
+
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Hello Triangle";
+        appInfo.pApplicationName = NAME;
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "No Engine";
+        appInfo.pEngineName = nullptr;
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
+        appInfo.apiVersion = VK_API_VERSION_1_4;
 
-        VkInstanceCreateInfo instanceInfo{};
-        instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        instanceInfo.pApplicationInfo = &appInfo;
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-        instanceInfo.enabledExtensionCount = glfwExtensionCount;
-        instanceInfo.ppEnabledExtensionNames = glfwExtensions;
-        instanceInfo.enabledLayerCount = 0;
-        if (vkCreateInstance(&instanceInfo, nullptr, &instance) != VK_SUCCESS) {
-            std::cout << "failed to create instance!" << std::endl;
-        }
+        VkInstanceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        createInfo.pApplicationInfo = &appInfo;
 
-        std::cout << "1. createInstance: " << "enable" << std::endl;
+        
+        
+        
+        createInfo.enabledExtensionCount = glfwExtensionCount;
+        createInfo.ppEnabledExtensionNames = glfwExtensions;
+        createInfo.enabledLayerCount = 0;
+
+        if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) std::cout << "failed to create instance!" << std::endl;
+
+        std::cout << "2. createInstance: " << "enable" << std::endl;
         isDone.push_back(true); nameFunction.push_back("createInstance");
     }
 
     void setupDebugMessenger() {
         if (!enableValidationLayers) return;
-        std::cout << "2. setupDebugMessenger: " << "custom" << std::endl;
+        std::cout << "3. setupDebugMessenger: " << "custom" << std::endl;
         isDone.push_back(true); nameFunction.push_back("setupDebugMessenger");
     }
 
     void createSurface() {
-        std::cout << "3. createSurface: ";
+        std::cout << "4. createSurface: ";
         if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
             throw std::runtime_error("failed to create window surface!");
         }
@@ -225,14 +228,14 @@ private:
                 break;
             }
 
-        std::cout << "4. pickPhysicalDevice: " << deviceProperties.deviceName << std::endl;
+        std::cout << "5. pickPhysicalDevice: " << deviceProperties.deviceName << std::endl;
 
         if (physicalDevice == VK_NULL_HANDLE) throw std::runtime_error("failed to find a suitable GPU!");
         isDone.push_back(true); nameFunction.push_back("pickPhysicalDevice");
     }
 
     void createLogicalDevice() {
-        std::cout << "5. createLogicalDevice: ";
+        std::cout << "6. createLogicalDevice: ";
 
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
@@ -274,7 +277,7 @@ private:
     }
 
     void createSwapChain() {
-        std::cout << "6. createSwapChain: try" << std::endl;
+        std::cout << "7. createSwapChain: try" << std::endl;
         PFN_vkCreateSwapchainKHR pfnCreate = (PFN_vkCreateSwapchainKHR)vkGetDeviceProcAddr(device, "vkCreateSwapchainKHR");     std::cout << "vkCreateSwapchainKHR address: " << (void*)pfnCreate << std::endl;         if (pfnCreate == nullptr) {         std::cout << "FATAL: VK_KHR_swapchain not loaded!" << std::endl;         return;     }
 
         std::cout << "physicalDevice: " << physicalDevice << std::endl;     std::cout << "device: " << device << std::endl;     std::cout << "surface: " << surface << std::endl;
@@ -426,6 +429,7 @@ private:
         std::cout << "Everything is runnable fine, but run doesn't mean you hasn't bugs!!!" << std::endl;
         std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
     }
+
     void daemonDebbugerSwapChain(VkSwapchainCreateInfoKHR ci) {
         std::cout << "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\" << std::endl;
         std::cout << "ci.sType: " << ci.sType << " (expected " << VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR << ")" << std::endl;
